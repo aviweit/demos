@@ -1,0 +1,43 @@
+# Skillberry Agent Proxy demo — store + worker containers.
+# Praxis runs on the host (built separately).
+#
+#   docker compose up -d              # start store + worker
+#   docker compose build worker       # rebuild worker (pulls latest from GitHub)
+#   docker compose down               # tear down
+
+services:
+  store:
+    image: ghcr.io/skillberry-ai/skillberry-store:latest
+    container_name: skillberry-demo-store
+    ports:
+      - "8000:8000"
+      - "8002:8002"
+    volumes:
+      - ./skills:/demo-skills:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  worker:
+    build:
+      context: ./worker
+    container_name: skillberry-demo-worker
+    ports:
+      - "7010:7010"
+    environment:
+      LLM_BASE_URL: "http://host.docker.internal:8081/v1"
+      WORKER_LOG_LEVEL: "INFO"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      store:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:7010/health\")'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
