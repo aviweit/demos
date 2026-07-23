@@ -61,13 +61,18 @@ cat <<'DESC'
   This skill has two tools: praxis_demo_greet and praxis_demo_echo.
 DESC
 
-# Path as seen inside the store container (volume-mounted in docker-compose.yml)
-SKILL_DIR_CONTAINER="/demo-skills/praxis-demo-hello-world"
+# Check if skill already exists in the store
+if curl -sf "http://localhost:${STORE_PORT}/skills/praxis-demo-hello-world" >/dev/null 2>&1; then
+    info "Skill 'praxis-demo-hello-world' already exists in the store — skipping import"
+else
+    # Path as seen inside the store container (volume-mounted in docker-compose.yml)
+    SKILL_DIR_CONTAINER="/demo-skills/praxis-demo-hello-world"
 
-curl -sf -X POST "http://localhost:${STORE_PORT}/skills/import-anthropic" \
-    -F "source_type=folder" \
-    -F "folder_path=${SKILL_DIR_CONTAINER}" \
-    -F "snippet_mode=file" | jq .
+    curl -sf -X POST "http://localhost:${STORE_PORT}/skills/import-anthropic" \
+        -F "source_type=folder" \
+        -F "folder_path=${SKILL_DIR_CONTAINER}" \
+        -F "snippet_mode=file" | jq .
+fi
 
 info "Verifying skill import..."
 curl -sf "http://localhost:${STORE_PORT}/skills/praxis-demo-hello-world" | jq '.name'
