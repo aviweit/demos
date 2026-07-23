@@ -134,7 +134,19 @@ DESC
 export OPENAI_API_BASE="http://localhost:${PRAXIS_PORT}/v1"
 export OPENAI_API_KEY="not-used"
 
-python3 "${SCRIPT_DIR}/emulate_client.py"
+# Set up Python venv for the client
+VENV_DIR="${DEMO_DIR}/.venv"
+if [[ ! -d "${VENV_DIR}" ]]; then
+    info "Creating virtual environment..."
+    python3 -m venv "${VENV_DIR}"
+fi
+if ! "${VENV_DIR}/bin/python" -c "import litellm" 2>/dev/null; then
+    info "Installing litellm into .venv..."
+    "${VENV_DIR}/bin/pip" install --quiet --upgrade pip
+    "${VENV_DIR}/bin/pip" install --quiet litellm
+fi
+
+"${VENV_DIR}/bin/python" "${SCRIPT_DIR}/emulate_client.py"
 
 # ══════════════════════════════════════════════════════════════════════════════
 printf '\n'

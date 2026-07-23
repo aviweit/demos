@@ -25,13 +25,10 @@ services:
     build:
       context: ./worker
     container_name: skillberry-demo-worker
-    ports:
-      - "7010:7010"
+    network_mode: host
     environment:
-      LLM_BASE_URL: "http://host.docker.internal:8081/v1"
+      LLM_BASE_URL: "http://127.0.0.1:8081/v1"
       WORKER_LOG_LEVEL: "INFO"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       store:
         condition: service_healthy
